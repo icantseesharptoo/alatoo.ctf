@@ -30,9 +30,11 @@ You will need:
 | **LED 1** | GPIO 18 | Pin 12 | Task 1 Indicator |
 | **LED 2** | GPIO 23 | Pin 16 | Task 2 Indicator |
 | **LED 3** | GPIO 24 | Pin 18 | Task 3 Indicator |
-| **GND** | GND | Pin 6/9/14/etc. | Common Ground for all LEDs |
+| **Reset Button** | GPIO 21 | Pin 40 | Reverts CTF to start |
+| **GND** | GND | Pin 6/9/14/etc. | Common Ground for all LEDs & Button |
 
-*Connect the positive (longer) leg of each LED to the GPIO pin and the negative (shorter) leg to GND via a resistor.*
+*   **LEDs:** Connect the positive (longer) leg to the GPIO pin and the negative (shorter) leg to GND via a resistor.
+*   **Button:** Connect one leg of the button to **GPIO 21 (Pin 40)** and the other leg to **GND**. No extra resistor needed (internal pull-up used).
 
 ## Software Installation
 

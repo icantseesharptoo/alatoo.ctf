@@ -27,20 +27,55 @@ LED_PINS = {
     'task2': 23,  # Pin 16
     'task3': 24   # Pin 18
 }
+RESET_PIN = 21   # Pin 40 (Connect Button to Pin 40 and GND)
 
 # --- GPIO SETUP ---
+def perform_reset(channel=None):
+    """Callback function for Physical Reset Button"""
+    print("\n[HARDWARE] Reset Button Pressed!")
+    
+    # 1. Reset Global State
+    global CURRENT_TASK1_PASSWORD
+    CURRENT_TASK1_PASSWORD = random.choice(COMMON_PASSWORDS)
+    print(f"New Task 1 Password: {CURRENT_TASK1_PASSWORD}")
+
+    # 2. Invalidate all existing sessions by rotating the Secret Key
+    app.secret_key = os.urandom(24)
+    print("Session Key Rotated (All users logged out)")
+    
+    # 3. Turn ALL LEDs ON
+    if GPIO_AVAILABLE:
+        for pin in LED_PINS.values():
+            GPIO.output(pin, GPIO.HIGH)
+    else:
+        print("[SIMULATION] All LEDs reset to ON")
+
 try:
     import RPi.GPIO as GPIO
     GPIO.setmode(GPIO.BCM)
+    
+    # Setup LEDs
     for pin in LED_PINS.values():
         GPIO.setup(pin, GPIO.OUT)
         GPIO.output(pin, GPIO.HIGH) # ALL ON initially
+        
+    # Setup Reset Button (Input with Internal Pull-Up)
+    # Button should connect GPIO 21 to GND when pressed.
+    GPIO.setup(RESET_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    
+    # Add Event Detect for button press (Falling edge = Button connects to GND)
+    GPIO.add_event_detect(RESET_PIN, GPIO.FALLING, callback=perform_reset, bouncetime=500)
+    
     GPIO_AVAILABLE = True
-    print(f"GPIO initialized. LEDs on pins {list(LED_PINS.values())} set to HIGH.")
+    print(f"GPIO initialized.")
+    print(f"- LEDs on pins: {list(LED_PINS.values())}")
+    print(f"- Reset Button on pin: {RESET_PIN} (Connect to GND)")
+    
 except (ImportError, RuntimeError):
     GPIO_AVAILABLE = False
     print("RPi.GPIO not found. Running in SIMULATION mode.")
 
+# Wrapper for consistency (can be called by logic or hardware)
 def control_led(task_name, state):
     """Control LED. State: True for ON, False for OFF."""
     pin = LED_PINS.get(task_name)
@@ -124,18 +159,8 @@ def complete():
 
 @app.route('/reset')
 def reset():
-    # Helper to reset state
-    session.clear()
-    global CURRENT_TASK1_PASSWORD
-    CURRENT_TASK1_PASSWORD = random.choice(COMMON_PASSWORDS)
-    print(f"Server Reset. New Task 1 Password: {CURRENT_TASK1_PASSWORD}")
-    
-    if GPIO_AVAILABLE:
-        for pin in LED_PINS.values():
-            GPIO.output(pin, GPIO.HIGH) # Turn all LEDs ON
-    else:
-        print("[SIMULATION] All LEDs reset to ON")
-        
+    # Helper to reset state via Web (triggers same logic as hardware button)
+    perform_reset()
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
