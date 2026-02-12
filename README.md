@@ -36,6 +36,8 @@ You will need:
 *   **LEDs:** Connect the positive (longer) leg to the GPIO pin and the negative (shorter) leg to GND via a resistor.
 *   **Button:** Connect one leg of the button to **GPIO 21 (Pin 40)** and the other leg to **GND**. No extra resistor needed (internal pull-up used).
 
+![Wiring Scheme](alatooctf-scheme_bb.png)
+
 ## Software Installation
 
 1.  **Update System:**
