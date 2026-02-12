@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Secure Access</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -11,19 +13,26 @@
             align-items: center;
             height: 100vh;
             margin: 0;
+            padding: 0 20px;
+            /* Prevent edge touching on small screens */
+            box-sizing: border-box;
         }
+
         .login-container {
             background-color: white;
             padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            width: 300px;
+            width: 100%;
+            max-width: 350px;
             text-align: center;
         }
+
         h2 {
             margin-bottom: 1.5rem;
             color: #333;
         }
+
         input {
             width: 100%;
             padding: 10px;
@@ -32,6 +41,7 @@
             border-radius: 4px;
             box-sizing: border-box;
         }
+
         button {
             width: 100%;
             padding: 10px;
@@ -42,33 +52,38 @@
             cursor: pointer;
             font-size: 16px;
         }
+
         button:hover {
             background-color: #0056b3;
         }
+
         .message {
             margin-top: 1rem;
             padding: 10px;
             border-radius: 4px;
         }
+
         .success {
             background-color: #d4edda;
             color: #155724;
         }
+
         .error {
             background-color: #f8d7da;
             color: #721c24;
         }
     </style>
 </head>
+
 <body>
     <div class="login-container">
         <h2>System Access</h2>
         {% if message %}
-            <div class="message {{ status }}">
-                {{ message }}
-            </div>
+        <div class="message {{ status }}">
+            {{ message }}
+        </div>
         {% endif %}
-        
+
         {% if not success %}
         <form method="POST">
             <input type="password" name="password" placeholder="Enter Password" required>
@@ -77,4 +92,5 @@
         {% endif %}
     </div>
 </body>
+
 </html>

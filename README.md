@@ -104,5 +104,81 @@ You will need:
     *   Password: `bary1985` (This can be customized in `server.py`)
 *   **Success:** LED 3 turns OFF.
 
-## Resetting
-Restart the python script to reset the passwords and turn all LEDs back ON.
+## Reset the software or press the **Reset Button** to generate a new password and turn all LEDs back ON.
+
+## Advanced Configuration
+
+### 1. Custom Domain Name (e.g., `alatooctf.local`)
+
+Instead of typing an IP address (like `192.168.1.5`), you can access the server using a friendly name.
+
+1.  **Install Avahi Daemon (mDNS):**
+    On the Raspberry Pi, run:
+    ```bash
+    sudo apt install avahi-daemon
+    ```
+
+2.  **Change Hostname (Optional):**
+    If your Pi's hostname is `raspberrypi`, the default address will be `raspberrypi.local`. To change it to `alatooctf`:
+    ```bash
+    sudo hostnamectl set-hostname alatooctf
+    ```
+    Then edit `/etc/hosts`:
+    ```bash
+    sudo nano /etc/hosts
+    ```
+    Replace `raspberrypi` with `alatooctf` in the last line (typically `127.0.1.1`).
+    Reboot the Pi: `sudo reboot`.
+
+3.  **Access:**
+    You can now access the site at: `http://alatooctf.local:5000`
+    *(Note: This works on iPhones, Macs, and Windows 10/11 automatically. Android devices may require a specific browser setting or update).*
+
+### 2. Auto-Run on Boot (Production Server)
+
+To ensure the server starts automatically when the Pi turns on, we'll use `gunicorn` (a production server) and `systemd`.
+
+1.  **Install Gunicorn:**
+    Running `pip install -r requirements.txt` should have installed it. If not:
+    ```bash
+    pip install gunicorn
+    ```
+
+2.  **Create Service File:**
+    Create a new systemd service file:
+    ```bash
+    sudo nano /etc/systemd/system/ctf-server.service
+    ```
+
+3.  **Add Configuration:**
+    Paste the following into the file. **IMPORTANT:** Change `/home/pi/ctf_challenge` to your actual project path.
+
+    ```ini
+    [Unit]
+    Description=Gunicorn instance to serve CTF Challenge
+    After=network.target
+
+    [Service]
+    User=pi
+    Group=www-data
+    WorkingDirectory=/home/pi/ctf_challenge
+    Environment="PATH=/home/pi/ctf_challenge/venv/bin"
+    ExecStart=/home/pi/ctf_challenge/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:5000 server:app
+
+    [Install]
+    WantedBy=multi-user.target
+    ```
+
+4.  **Start and Enable:**
+    ```bash
+    sudo systemctl start ctf-server
+    sudo systemctl enable ctf-server
+    ```
+
+5.  **Check Status:**
+    ```bash
+    sudo systemctl status ctf-server
+    ```
+
+### 3. Mobile Friendly
+The web interface is now responsive! You can easily play the CTF from your smartphone connected to the same Wi-Fi network.
