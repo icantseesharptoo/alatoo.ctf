@@ -1,70 +1,153 @@
-from flask import Flask, render_template, request
+import os
+import random
+import time
+from flask import Flask, render_template, request, session, redirect, url_for, jsonify
 
 app = Flask(__name__)
+app.secret_key = os.urandom(24)  # Secret key for session management
 
 # --- CONFIGURATION ---
-# The correct password is one of the top 10 most common passwords.
-# Top 10 list usually includes: 123456, password, 123456789, 12345678, 12345, 111111, 1234567, sunshine, qwerty, iloveyou
-SECRET_PASSWORD = "password" 
-LED_PIN = 18  # BCM pin 18 (physical pin 12)
+# Task 1: Brute Force
+COMMON_PASSWORDS = [
+    "123456", "password", "123456789", "12345678", "12345", 
+    "111111", "1234567", "sunshine", "qwerty", "iloveyou"
+]
+CURRENT_TASK1_PASSWORD = None  # Will be set on startup
+
+# Task 2: DDoS
+DDOS_TARGET = 1000
+
+# Task 3: OSINT
+OSINT_USER = "andrei"
+OSINT_PASS = "bary1985" # Example: Dog 'Bary', Year 1985
+
+# GPIO Configuration
+LED_PINS = {
+    'task1': 18,  # Pin 12
+    'task2': 23,  # Pin 16
+    'task3': 24   # Pin 18
+}
 
 # --- GPIO SETUP ---
-# We wrap this in a try-except block so the code runs on non-Raspberry Pi systems
 try:
     import RPi.GPIO as GPIO
     GPIO.setmode(GPIO.BCM)
-    GPIO.setup(LED_PIN, GPIO.OUT)
-    GPIO.output(LED_PIN, GPIO.LOW) # Ensure LED is off initially
+    for pin in LED_PINS.values():
+        GPIO.setup(pin, GPIO.OUT)
+        GPIO.output(pin, GPIO.HIGH) # ALL ON initially
     GPIO_AVAILABLE = True
-    print(f"GPIO initialized. LED on PIN {LED_PIN}")
+    print(f"GPIO initialized. LEDs on pins {list(LED_PINS.values())} set to HIGH.")
 except (ImportError, RuntimeError):
     GPIO_AVAILABLE = False
-    print("RPi.GPIO not found or not running on a Pi. Running in SIMULATION mode.")
+    print("RPi.GPIO not found. Running in SIMULATION mode.")
+
+def control_led(task_name, state):
+    """Control LED. State: True for ON, False for OFF."""
+    pin = LED_PINS.get(task_name)
+    if not pin: return
+    
+    # In this logic, ON means "Task Active" (LED ON/HIGH)
+    # Task Solved means "Task Inactive" (LED OFF/LOW)
+    gpio_state = GPIO.HIGH if state else GPIO.LOW
+    
+    if GPIO_AVAILABLE:
+        GPIO.output(pin, gpio_state)
+    else:
+        status = "ON" if state else "OFF"
+        print(f"[SIMULATION] LED {task_name} (Pin {pin}) turned {status}")
 
 # --- ROUTES ---
-@app.route('/', methods=['GET', 'POST'])
-def home():
-    message = None
-    status = ""
-    is_success = False
 
+@app.route('/', methods=['GET', 'POST'])
+def index():
+    # Task 1: Brute Force Login
+    error = None
     if request.method == 'POST':
         password = request.form.get('password')
-        
-        if password == SECRET_PASSWORD:
-            message = "Access Granted! LED turned ON."
-            status = "success"
-            is_success = True
-            if GPIO_AVAILABLE:
-                GPIO.output(LED_PIN, GPIO.HIGH)
-            else:
-                print(f"[SIMULATION] LED ON (Pin {LED_PIN})")
+        if password == CURRENT_TASK1_PASSWORD:
+            session['task1_solved'] = True
+            control_led('task1', False) # Turn Led 1 OFF
+            return redirect(url_for('task2'))
         else:
-            message = "Access Denied! Incorrect Password."
-            status = "error"
-            if GPIO_AVAILABLE:
-                GPIO.output(LED_PIN, GPIO.LOW) # Ensure it stays off
-            else:
-                print(f"[SIMULATION] LED OFF (Pin {LED_PIN})")
+            error = "Access Denied! Incorrect Password."
+    
+    return render_template('index.html', message=error, status="error" if error else "")
 
-    return render_template('index.html', message=message, status=status, success=is_success)
+@app.route('/task2')
+def task2():
+    if not session.get('task1_solved'):
+        return redirect(url_for('index'))
+    
+    count = session.get('ddos_count', 0)
+    return render_template('task2.html', count=count)
+
+@app.route('/api/click', methods=['POST'])
+def api_click():
+    if not session.get('task1_solved'):
+        return jsonify({'error': 'Unauthorized'}), 403
+        
+    count = session.get('ddos_count', 0) + 1
+    session['ddos_count'] = count
+    
+    completed = False
+    if count >= DDOS_TARGET:
+        session['task2_solved'] = True
+        control_led('task2', False) # Turn Led 2 OFF
+        completed = True
+        
+    return jsonify({'count': count, 'completed': completed})
+
+@app.route('/task3', methods=['GET', 'POST'])
+def task3():
+    if not session.get('task2_solved'):
+        return redirect(url_for('task2'))
+        
+    error = None
+    if request.method == 'POST':
+        username = request.form.get('username').lower()
+        password = request.form.get('password').lower()
+        
+        if username == OSINT_USER and password == OSINT_PASS:
+            session['task3_solved'] = True
+            control_led('task3', False) # Turn Led 3 OFF
+            return redirect(url_for('complete'))
+        else:
+            error = "Invalid Credentials"
+            
+    return render_template('task3.html', error=error)
+
+@app.route('/complete')
+def complete():
+    if not session.get('task3_solved'):
+        return redirect(url_for('task3'))
+    return render_template('complete.html')
 
 @app.route('/reset')
 def reset():
-    # Helper route to turn off the LED effortlessly
+    # Helper to reset state
+    session.clear()
+    global CURRENT_TASK1_PASSWORD
+    CURRENT_TASK1_PASSWORD = random.choice(COMMON_PASSWORDS)
+    print(f"Server Reset. New Task 1 Password: {CURRENT_TASK1_PASSWORD}")
+    
     if GPIO_AVAILABLE:
-        GPIO.output(LED_PIN, GPIO.LOW)
+        for pin in LED_PINS.values():
+            GPIO.output(pin, GPIO.HIGH) # Turn all LEDs ON
     else:
-        print(f"[SIMULATION] LED OFF (Pin {LED_PIN})")
-    return "LED Reset"
+        print("[SIMULATION] All LEDs reset to ON")
+        
+    return redirect(url_for('index'))
 
 if __name__ == '__main__':
+    # Initialize Random Password
+    CURRENT_TASK1_PASSWORD = random.choice(COMMON_PASSWORDS)
+    print(f"--- SERVER STARTED ---")
+    print(f"Task 1 Password: {CURRENT_TASK1_PASSWORD}")
+    print(f"Task 3 Credentials: {OSINT_USER} / {OSINT_PASS}")
+    
     try:
         # Host 0.0.0.0 makes it accessible on the local network
-        print("Starting server on port 5000...")
         app.run(host='0.0.0.0', port=5000, debug=False)
-    except Exception as e:
-        print(f"Error starting server: {e}")
     finally:
         if GPIO_AVAILABLE:
             GPIO.cleanup()

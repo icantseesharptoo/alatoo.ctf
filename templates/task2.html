@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Task 2: Data Extraction</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            flex-direction: column;
+        }
+
+        .container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 400px;
+        }
+
+        button {
+            padding: 15px 30px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            margin-top: 20px;
+            transition: transform 0.1s;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        .progress {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .info {
+            color: #666;
+            margin-bottom: 20px;
+        }
+    </style>
+    <script>
+        function clickButton() {
+            fetch('/api/click', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('counter').innerText = data.count + "/1000";
+                    if (data.completed) {
+                        window.location.href = "/task3";
+                    }
+                });
+        }
+    </script>
+</head>
+
+<body>
+    <div class="container">
+        <h2>Task 2: Data Flood</h2>
+        <p class="info">The system is overwhelmed efficiently by high-frequency requests. Simulate a DDoS attack to
+            overload the firewall.</p>
+        <button onclick="clickButton()">GET DATA</button>
+        <div class="progress" id="counter">{{ count }}/1000</div>
+    </div>
+</body>
+
+</html>

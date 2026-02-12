@@ -1,43 +1,106 @@
-# Raspberry Pi Web Server with Brute Force Vulnerability
 
-This project implements a simple Flask web server designed to demonstrate a brute-force vulnerability. It includes a login page that accepts a password. If the correct password is entered, an LED connected to the Raspberry Pi is turned on.
+# Raspberry Pi Mini-CTF Challenge
 
-## Files
+This project is a multi-stage Capture The Flag (CTF) challenge designed for a Raspberry Pi. It involves web exploitation, brute-forcing, script automation, and basic OSINT.
 
-*   `server.py`: The main Flask application. Handles the web server, password checking, and GPIO control.
-*   `templates/index.html`: The HTML template for the login page.
-*   `requirements.txt`: List of Python dependencies.
-*   `attack.py`: A demonstration script that bruteforces the login page using a list of common passwords.
+## Features
 
-## Setup on Raspberry Pi
+*   **3 Stages:**
+    1.  **Brute Force:** Crack a random top-10 password to gain initial access.
+    2.  **DDoS Simulation:** Automate requests to "overload" the system (1000 clicks required).
+    3.  **OSINT:** Find the specific credentials based on a hint about the Dean and his dog.
+*   **LED Feedback:**
+    *   3 LEDs represent the security layers.
+    *   **Initial State:** All LEDs ON.
+    *   **Success State:** As each task is solved, the corresponding LED turns OFF.
+*   **Web Interface:** Clean, responsive UI for each stage.
 
-1.  **Install Dependencies:**
-    Open a terminal on your Raspberry Pi and run:
+## Hardware Setup
+
+You will need:
+*   Raspberry Pi (3 or 4 recommended)
+*   3 LEDs (Red, Yellow, Green recommended)
+*   3 Resistors (220Ω - 330Ω)
+*   Jumper wires and Breadboard
+
+**Wiring:**
+
+| Component | RPi GPIO Pin (BCM) | Physical Pin | Description |
+| :--- | :--- | :--- | :--- |
+| **LED 1** | GPIO 18 | Pin 12 | Task 1 Indicator |
+| **LED 2** | GPIO 23 | Pin 16 | Task 2 Indicator |
+| **LED 3** | GPIO 24 | Pin 18 | Task 3 Indicator |
+| **GND** | GND | Pin 6/9/14/etc. | Common Ground for all LEDs |
+
+*Connect the positive (longer) leg of each LED to the GPIO pin and the negative (shorter) leg to GND via a resistor.*
+
+## Software Installation
+
+1.  **Update System:**
+    ```bash
+    sudo apt update
+    sudo apt upgrade
+    ```
+
+2.  **Install Python 3 and venv:**
+    Raspberry Pi OS usually comes with Python 3. Install `venv` to create isolated environments:
+    ```bash
+    sudo apt install python3-venv python3-pip
+    ```
+
+3.  **Clone/Copy Files:**
+    Copy the project files to a folder on your Pi (e.g., `~/ctf_challenge`).
+
+4.  **Create Virtual Environment:**
+    Navigate to the project folder and run:
+    ```bash
+    python3 -m venv venv
+    ```
+
+5.  **Activate Environment:**
+    ```bash
+    source venv/bin/activate
+    ```
+
+6.  **Install Dependencies:**
     ```bash
     pip install -r requirements.txt
     ```
 
-2.  **Connect the LED:**
-    *   Connect the **positive (simpler)** leg of the LED to **GPIO Pin 18 (Physical Pin 12)**.
-    *   Connect the **negative (shorter)** leg of the LED to a **GND (Ground)** pin (e.g., Physical Pin 6) via a resistor (220Ω or 330Ω is recommended).
+## Running the Server
 
-3.  **Run the Server:**
+1.  **Start the Server:**
+    Ensure you are in the virtual environment (`(venv)` should appear in your terminal prompt) and run:
     ```bash
     python server.py
     ```
-    The server will start on port 5000. You can access it from a browser at `http://<your-pi-ip>:5000`.
+    The server will start on port `5000`.
 
-## Testing the Vulnerability
+2.  **Access the Challenge:**
+    Open a browser on any device in the same network and go to:
+    `http://<RASPBERRY_PI_IP>:5000`
 
-1.  Keep the server running.
-2.  Open another terminal window (or use your computer if connected to the same network).
-3.  Run the attack script:
-    ```bash
-    python attack.py
-    ```
-    This script will try passwords from a top-10 list until it finds the correct one ("password") and turns on the LED.
+## Solving the Challenges
 
-## Notes
+### Task 1: Brute Force
+*   **Goal:** Login to the system.
+*   **Method:** The password is one of the top 10 most common passwords. It is selected randomly each time the server starts.
+*   **Action:** Write a script or guess manualy.
+*   **Success:** LED 1 turns OFF.
 
-*   **Simulation Mode:** If you run `server.py` on a computer without GPIO (like Windows), it will run in "Simulation Mode" and just print messages to the console instead of controlling an actual LED.
-*   **Safety:** This is a vulnerable application. Do not run this on a public network securely.
+### Task 2: Data Flood
+*   **Goal:** Retrieve "Data" 1000 times.
+*   **Method:** Clicking the button manually is too slow.
+*   **Action:** Write a script or use console commands to send POST requests to `/api/click`.
+*   **Success:** LED 2 turns OFF.
+
+### Task 3: Admin Access (OSINT)
+*   **Goal:** Login as the Administrator.
+*   **Hint:** "Dean of the faculty (Andrei). Password is Dog name + Birthyear."
+*   **Solution (Default):**
+    *   User: `andrei`
+    *   Password: `bary1985` (This can be customized in `server.py`)
+*   **Success:** LED 3 turns OFF.
+
+## Resetting
+Restart the python script to reset the passwords and turn all LEDs back ON.
