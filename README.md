@@ -47,9 +47,9 @@ You will need:
     ```
 
 2.  **Install Python 3 and venv:**
-    Raspberry Pi OS usually comes with Python 3. Install `venv` to create isolated environments:
+    Raspberry Pi OS usually comes with Python 3. Install `venv` and `dev` (required for compiling RPi.GPIO):
     ```bash
-    sudo apt install python3-venv python3-pip
+    sudo apt install python3-venv python3-dev python3-pip
     ```
 
 3.  **Clone/Copy Files:**

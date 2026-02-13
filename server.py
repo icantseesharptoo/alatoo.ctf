@@ -52,18 +52,15 @@ def perform_reset(channel=None):
 
 try:
     import RPi.GPIO as GPIO
+    GPIO.setwarnings(False)  # Add this line
     GPIO.setmode(GPIO.BCM)
     
     # Setup LEDs
     for pin in LED_PINS.values():
         GPIO.setup(pin, GPIO.OUT)
-        GPIO.output(pin, GPIO.HIGH) # ALL ON initially
+        GPIO.output(pin, GPIO.HIGH)
         
-    # Setup Reset Button (Input with Internal Pull-Up)
-    # Button should connect GPIO 21 to GND when pressed.
     GPIO.setup(RESET_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-    
-    # Add Event Detect for button press (Falling edge = Button connects to GND)
     GPIO.add_event_detect(RESET_PIN, GPIO.FALLING, callback=perform_reset, bouncetime=500)
     
     GPIO_AVAILABLE = True
@@ -71,9 +68,9 @@ try:
     print(f"- LEDs on pins: {list(LED_PINS.values())}")
     print(f"- Reset Button on pin: {RESET_PIN} (Connect to GND)")
     
-except (ImportError, RuntimeError):
+except (ImportError, RuntimeError) as e:
     GPIO_AVAILABLE = False
-    print("RPi.GPIO not found. Running in SIMULATION mode.")
+    print(f"RPi.GPIO not found. Running in SIMULATION mode. ({e})")
 
 # Wrapper for consistency (can be called by logic or hardware)
 def control_led(task_name, state):
