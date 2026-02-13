@@ -15,7 +15,7 @@ COMMON_PASSWORDS = [
 CURRENT_TASK1_PASSWORD = None  # Will be set on startup
 
 # Task 2: DDoS
-DDOS_TARGET = 1000
+DDOS_TARGET = 100
 
 # Task 3: OSINT
 OSINT_USER = "andrei"
