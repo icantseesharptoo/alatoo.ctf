@@ -184,3 +184,9 @@ To ensure the server starts automatically when the Pi turns on, we'll use `gunic
 
 ### 3. Mobile Friendly
 The web interface is now responsive! You can easily play the CTF from your smartphone connected to the same Wi-Fi network.
+
+## Troubleshooting
+
+### RPi Light Version Issues
+If you are using the Raspberry Pi OS Lite version or encountering specific issues, check this guide:
+[Troubleshooting Guide (RPi Light Version)](https://claude.ai/share/15254c62-b0f2-4180-a595-5b9d9396a09f)
