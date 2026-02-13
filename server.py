@@ -52,7 +52,7 @@ def perform_reset(channel=None):
 
 try:
     import RPi.GPIO as GPIO
-    GPIO.setwarnings(False)  # Add this line
+    GPIO.setwarnings(False)
     GPIO.setmode(GPIO.BCM)
     
     # Setup LEDs
@@ -61,6 +61,8 @@ try:
         GPIO.output(pin, GPIO.HIGH)
         
     GPIO.setup(RESET_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    
+    GPIO.remove_event_detect(RESET_PIN)  # Clean up any previous event detection
     GPIO.add_event_detect(RESET_PIN, GPIO.FALLING, callback=perform_reset, bouncetime=500)
     
     GPIO_AVAILABLE = True
